@@ -31,7 +31,7 @@ public class UserController {
 		return "user/login/register";
 	}
 
-	@PostMapping("/users")
+	@PostMapping("/users") //회원가입 계정 생성
 	public String createUser(AccountDto accountDto) {
 		ModelMapper modelMapper = new ModelMapper();
 		Account account = modelMapper.map(accountDto, Account.class);
