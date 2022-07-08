@@ -1,6 +1,7 @@
 package com.example.springsecuritybase.security.configs;
 
 import com.example.springsecuritybase.security.common.FormAuthenticationDetailsSource;
+import com.example.springsecuritybase.security.handler.CustomAccessDeniedHandler;
 import com.example.springsecuritybase.security.handler.CustomAuthenticationFailureHandler;
 import com.example.springsecuritybase.security.handler.CustomAuthenticationSuccessHandler;
 import com.example.springsecuritybase.security.provider.CustomAuthenticationProvider;
@@ -19,9 +20,11 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import javax.persistence.Access;
 import java.security.cert.Extension;
 
 @Configuration
@@ -46,11 +49,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         auth.authenticationProvider(authenticationProvider()); //위 내용 포함
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        return new CustomAuthenticationProvider();
-    }
-
     @Override
     public void configure(WebSecurity web) throws Exception { //webignore - 필터를 거치지 않음(permitAll 차이점)
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations()); //js,css,img 파일 같이 필터를 적용할 필요가 없는 리소스 적용
@@ -59,6 +57,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public PasswordEncoder PasswordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        return new CustomAuthenticationProvider();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        CustomAccessDeniedHandler accessDeniedHandler = new CustomAccessDeniedHandler();
+        accessDeniedHandler.setErrorPage("/denied");
+        return accessDeniedHandler;
     }
 
     @Override
@@ -80,6 +90,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandler(customAuthenticationSuccessHandler)
                 .failureHandler(customAuthenticationFailureHandler)
                 .permitAll()
+
+                .and()
+                .exceptionHandling()
+                .accessDeniedHandler(accessDeniedHandler())
         ;
     }
 }
