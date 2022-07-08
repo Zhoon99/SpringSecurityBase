@@ -1,5 +1,8 @@
 package com.example.springsecuritybase.security.configs;
 
+import com.example.springsecuritybase.security.common.FormAuthenticationDetailsSource;
+import com.example.springsecuritybase.security.handler.CustomAuthenticationFailureHandler;
+import com.example.springsecuritybase.security.handler.CustomAuthenticationSuccessHandler;
 import com.example.springsecuritybase.security.provider.CustomAuthenticationProvider;
 import com.example.springsecuritybase.security.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import java.security.cert.Extension;
@@ -28,10 +32,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //    private CustomUserDetailsService customUserDetailsService;  //provider가 UserDetailsService를 포함
 
     @Autowired
-    private AuthenticationDetailsSource authenticationDetailsSource;
+    private FormAuthenticationDetailsSource formAuthenticationDetailsSource;
 
     @Autowired
-    private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
+    @Autowired
+    private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -58,7 +65,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/users").permitAll()
+                .antMatchers("/", "/users","user/login/**","/login*").permitAll()
                 .antMatchers("/mypage").hasRole("USER") //hasRole : ROLE_권한명(prefix 로 ROLE_이 붙음)
                 .antMatchers("/messages").hasRole("MANAGER")
                 .antMatchers("/config").hasRole("ADMIN")
@@ -68,9 +75,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login_proc")
-                .authenticationDetailsSource(authenticationDetailsSource)
+                .authenticationDetailsSource(formAuthenticationDetailsSource)
                 .defaultSuccessUrl("/")
                 .successHandler(customAuthenticationSuccessHandler)
+                .failureHandler(customAuthenticationFailureHandler)
                 .permitAll()
         ;
     }
