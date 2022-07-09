@@ -1,6 +1,7 @@
 package com.example.springsecuritybase.security.configs;
 
 import com.example.springsecuritybase.security.common.FormAuthenticationDetailsSource;
+import com.example.springsecuritybase.security.filter.AjaxLoginProcessingFilter;
 import com.example.springsecuritybase.security.handler.CustomAccessDeniedHandler;
 import com.example.springsecuritybase.security.handler.CustomAuthenticationFailureHandler;
 import com.example.springsecuritybase.security.handler.CustomAuthenticationSuccessHandler;
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.persistence.Access;
 import java.security.cert.Extension;
@@ -50,8 +53,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    public void configure(WebSecurity web) throws Exception { //webignore - 필터를 거치지 않음(permitAll 차이점)
+    public void configure(WebSecurity web) throws Exception { //webIgnore - 필터를 거치지 않음(permitAll 차이점)
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations()); //js,css,img 파일 같이 필터를 적용할 필요가 없는 리소스 적용
+    }
+
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception { //AjaxAuthenticationFilter 를 사용하기 위한 Manager 정의
+        return super.authenticationManagerBean();
     }
 
     @Bean
@@ -69,6 +77,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         CustomAccessDeniedHandler accessDeniedHandler = new CustomAccessDeniedHandler();
         accessDeniedHandler.setErrorPage("/denied");
         return accessDeniedHandler;
+    }
+
+    @Bean
+    public AjaxLoginProcessingFilter ajaxLoginProcessingFilter() throws Exception {
+        AjaxLoginProcessingFilter ajaxLoginProcessingFilter = new AjaxLoginProcessingFilter();
+        ajaxLoginProcessingFilter.setAuthenticationManager(authenticationManagerBean());
+        return  ajaxLoginProcessingFilter;
     }
 
     @Override
@@ -94,6 +109,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .exceptionHandling()
                 .accessDeniedHandler(accessDeniedHandler())
+
+                .and()
+                .addFilterBefore(ajaxLoginProcessingFilter(), UsernamePasswordAuthenticationFilter.class)
         ;
+        http.csrf().disable(); //csrf 기능 끄기
     }
 }
