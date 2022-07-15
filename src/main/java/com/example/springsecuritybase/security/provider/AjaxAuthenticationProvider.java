@@ -36,13 +36,11 @@ public class AjaxAuthenticationProvider implements AuthenticationProvider { //�
         }
 
         //인증 검증이 완료되면 AjaxAuthenticationToken 을 생성하여 최종 인증 객체를 반환
-        AjaxAuthenticationToken authenticationToken =
-                new AjaxAuthenticationToken(userDetails.getAccount(), null, userDetails.getAuthorities());
-        return authenticationToken;
+        return new AjaxAuthenticationToken(userDetails.getAccount(), null, userDetails.getAuthorities());
     }
 
     @Override
     public boolean supports(Class<?> authentication) { //ProviderManager 로 부터 넘어온 인증객체가 AjaxAuthenticationToken 타입이면 최종 인증 객체 반환
-        return AjaxAuthenticationToken.class.isAssignableFrom(authentication);
+        return authentication.equals(AjaxAuthenticationToken.class);
     }
 }
