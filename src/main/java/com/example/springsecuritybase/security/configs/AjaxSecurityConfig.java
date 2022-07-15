@@ -50,9 +50,10 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .antMatcher("/api/**") //api 로 시작하는 요청에 한해서만 동작
+                .antMatcher("/api/**")
                 .authorizeRequests()
                 .antMatchers("/api/messages").hasRole("MANAGER")
+                .antMatchers("/api/login").permitAll()
                 .anyRequest().authenticated();
 //                .and()
 //                .addFilterBefore(ajaxLoginProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -62,7 +63,7 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(new AjaxLoginAuthenticationEntryPoint())
                 .accessDeniedHandler(ajaxAccessDeniedHandler());
 
-        http.csrf().disable(); //csrf 기능 끄기
+        //http.csrf().disable(); //csrf 기능 끄기
 
         customConfigurerAjax(http);
     }
@@ -73,7 +74,8 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandlerAjax(ajaxAuthenticationSuccessHandler())
                 .failureHandlerAjax(ajaxAuthenticationFailureHandler())
                 .setAuthenticationManager(authenticationManagerBean())
-                .loginProcessingUrl("/api/login");
+                .loginProcessingUrl("/api/login")
+                .loginPage("/api/login");
     }
 
     public AccessDeniedHandler ajaxAccessDeniedHandler() {
