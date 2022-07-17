@@ -21,6 +21,10 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public CustomAuthenticationProvider(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
@@ -50,6 +54,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication); //토큰이 파라미터로 전달된 클래스 타입과 일치할 때 인증 처리
+        return authentication.equals(UsernamePasswordAuthenticationToken.class); //토큰이 파라미터로 전달된 클래스 타입과 일치할 때 인증 처리
     }
 }

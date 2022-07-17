@@ -16,7 +16,7 @@ import java.io.IOException;
 
 public class AjaxAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
@@ -34,6 +34,6 @@ public class AjaxAuthenticationFailureHandler implements AuthenticationFailureHa
             errorMessage = "Expired Password";
         }
 
-        objectMapper.writeValue(response.getWriter(), errorMessage);
+        mapper.writeValue(response.getWriter(), errorMessage);
     }
 }

@@ -9,13 +9,12 @@ import java.util.Collection;
 
 public class AjaxAuthenticationToken extends AbstractAuthenticationToken { //UsernamePasswordAuthenticationToken 틀 복사해서 사용
 
-    private static final long serialVersionUID = 570L;
     private final Object principal;
     private Object credentials;
 
     //인증 받기 전에 사용자가 입력하는 id/pw 를 담는 생성자
     public AjaxAuthenticationToken(Object principal, Object credentials) {
-        super((Collection)null);
+        super(null);
         this.principal = principal;
         this.credentials = credentials;
         this.setAuthenticated(false);
@@ -29,29 +28,11 @@ public class AjaxAuthenticationToken extends AbstractAuthenticationToken { //Use
         super.setAuthenticated(true);
     }
 
-    public static UsernamePasswordAuthenticationToken unauthenticated(Object principal, Object credentials) {
-        return new UsernamePasswordAuthenticationToken(principal, credentials);
-    }
-
-    public static UsernamePasswordAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
-        return new UsernamePasswordAuthenticationToken(principal, credentials, authorities);
-    }
-
     public Object getCredentials() {
         return this.credentials;
     }
 
     public Object getPrincipal() {
         return this.principal;
-    }
-
-    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
-        Assert.isTrue(!isAuthenticated, "Cannot set this token to trusted - use constructor which takes a GrantedAuthority list instead");
-        super.setAuthenticated(false);
-    }
-
-    public void eraseCredentials() {
-        super.eraseCredentials();
-        this.credentials = null;
     }
 }
