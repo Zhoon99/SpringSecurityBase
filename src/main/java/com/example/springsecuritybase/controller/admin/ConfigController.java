@@ -10,4 +10,6 @@ public class ConfigController {
     public String config(){
         return "admin/config";
     }
+
+    //아니 퓌발 브랜치 왜 안 됨?
 }
