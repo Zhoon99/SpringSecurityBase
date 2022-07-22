@@ -20,7 +20,7 @@ public final class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends
     private AuthenticationManager authenticationManager;
 
     public AjaxLoginConfigurer() {
-        super(new AjaxLoginProcessingFilter(), null); //필터를 생성해 부모 클래스에 전달
+        super(new AjaxLoginProcessingFilter(), null);
     }
 
     @Override
@@ -29,26 +29,26 @@ public final class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends
     }
 
     @Override
-    public void configure(H http) throws Exception {
+    public void configure(H http) {
 
-        if (authenticationManager == null) {
-            authenticationManager = http.getSharedObject(AuthenticationManager.class); //공유 객체 저장
+        if(authenticationManager == null){
+            authenticationManager = http.getSharedObject(AuthenticationManager.class);
         }
-        getAuthenticationFilter().setAuthenticationManager(authenticationManager); //AjaxLoginProcessingFilter 가져와서 설정
+        getAuthenticationFilter().setAuthenticationManager(authenticationManager);
         getAuthenticationFilter().setAuthenticationSuccessHandler(successHandler);
         getAuthenticationFilter().setAuthenticationFailureHandler(failureHandler);
 
-        SessionAuthenticationStrategy sessionAuthenticationStrategy = http.getSharedObject(SessionAuthenticationStrategy.class);
+        SessionAuthenticationStrategy sessionAuthenticationStrategy = http
+                .getSharedObject(SessionAuthenticationStrategy.class);
         if (sessionAuthenticationStrategy != null) {
             getAuthenticationFilter().setSessionAuthenticationStrategy(sessionAuthenticationStrategy);
         }
-
-        RememberMeServices rememberMeServices = http.getSharedObject(RememberMeServices.class);
+        RememberMeServices rememberMeServices = http
+                .getSharedObject(RememberMeServices.class);
         if (rememberMeServices != null) {
             getAuthenticationFilter().setRememberMeServices(rememberMeServices);
         }
-
-        http.setSharedObject(AjaxLoginProcessingFilter.class, getAuthenticationFilter());
+        http.setSharedObject(AjaxLoginProcessingFilter.class,getAuthenticationFilter());
         http.addFilterBefore(getAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -71,4 +71,5 @@ public final class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends
     protected RequestMatcher createLoginProcessingUrlMatcher(String loginProcessingUrl) {
         return new AntPathRequestMatcher(loginProcessingUrl, "POST");
     }
+
 }

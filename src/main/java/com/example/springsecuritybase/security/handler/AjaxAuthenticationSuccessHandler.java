@@ -14,15 +14,18 @@ import java.io.IOException;
 
 public class AjaxAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    //account 객체를 JSON 으로 변환해 클라이언트로 전달
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                        Authentication authentication) throws IOException, ServletException {
         Account account = (Account) authentication.getPrincipal();
 
         response.setStatus(HttpStatus.OK.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+//        HttpSession session = request.getSession();
+//        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
 
         mapper.writeValue(response.getWriter(), account);
     }

@@ -1,10 +1,13 @@
 package com.example.springsecuritybase.security.configs;
 
-import com.example.springsecuritybase.security.common.FormAuthenticationDetailsSource;
-import com.example.springsecuritybase.security.handler.*;
-import com.example.springsecuritybase.security.metadatasource.UrlFilterInvocationSecurityMetadatsSource;
+import com.example.springsecuritybase.security.common.FormWebAuthenticationDetailsSource;
+import com.example.springsecuritybase.security.handler.AjaxAuthenticationFailureHandler;
+import com.example.springsecuritybase.security.handler.AjaxAuthenticationSuccessHandler;
+import com.example.springsecuritybase.security.handler.FormAccessDeniedHandler;
+import com.example.springsecuritybase.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import com.example.springsecuritybase.security.provider.AjaxAuthenticationProvider;
-import com.example.springsecuritybase.security.provider.CustomAuthenticationProvider;
+import com.example.springsecuritybase.security.provider.FormAuthenticationProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +28,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 import java.util.Arrays;
@@ -32,27 +37,24 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@Slf4j
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-//    @Autowired
-//    private CustomUserDetailsService customUserDetailsService;  //provider가 UserDetailsService를 포함
-
     @Autowired
-    private FormAuthenticationDetailsSource formAuthenticationDetailsSource;
+    private FormWebAuthenticationDetailsSource formWebAuthenticationDetailsSource;
     @Autowired
-    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private AuthenticationSuccessHandler formAuthenticationSuccessHandler;
     @Autowired
-    private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    private AuthenticationFailureHandler formAuthenticationFailureHandler;
 
     @Override
-    public void configure(WebSecurity web) throws Exception { //webIgnore - 필터를 거치지 않음(permitAll 차이점)
-        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations()); //js,css,img 파일 같이 필터를 적용할 필요가 없는 리소스 적용
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        //auth.userDetailsService(customUserDetailsService);
-        auth.authenticationProvider(authenticationProvider()); //위 내용 포함
+        auth.authenticationProvider(authenticationProvider());
         auth.authenticationProvider(ajaxAuthenticationProvider());
     }
 
@@ -62,37 +64,34 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    protected void configure(final HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/mypage").hasRole("USER") //hasRole : ROLE_권한명(prefix 로 ROLE_이 붙음)
+                .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .antMatchers("/config").hasRole("ADMIN")
                 .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
-
                 .and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login_proc")
-                .authenticationDetailsSource(formAuthenticationDetailsSource)
-                .defaultSuccessUrl("/")
-                .successHandler(customAuthenticationSuccessHandler)
-                .failureHandler(customAuthenticationFailureHandler)
+                .authenticationDetailsSource(formWebAuthenticationDetailsSource)
+                .successHandler(formAuthenticationSuccessHandler)
+                .failureHandler(formAuthenticationFailureHandler)
                 .permitAll()
-
-                .and()
+        .and()
                 .exceptionHandling()
 //                .authenticationEntryPoint(new AjaxLoginAuthenticationEntryPoint())
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(accessDeniedHandler())
-
-//                .and()
+//        .and()
 //                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class)
         ;
 
         http.csrf().disable();
+
         customConfigurer(http);
     }
 
@@ -111,8 +110,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
-        return new CustomAuthenticationProvider(passwordEncoder());
+    public AuthenticationProvider authenticationProvider(){
+        return new FormAuthenticationProvider(passwordEncoder());
     }
 
     @Bean
@@ -130,11 +129,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new AjaxAuthenticationFailureHandler();
     }
 
-    @Bean
     public AccessDeniedHandler accessDeniedHandler() {
-        CustomAccessDeniedHandler accessDeniedHandler = new CustomAccessDeniedHandler();
-        accessDeniedHandler.setErrorPage("/denied");
-        return accessDeniedHandler;
+        FormAccessDeniedHandler commonAccessDeniedHandler = new FormAccessDeniedHandler();
+        commonAccessDeniedHandler.setErrorPage("/denied");
+        return commonAccessDeniedHandler;
     }
 
     @Bean
@@ -148,16 +146,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private AccessDecisionManager affirmativeBased() {
-        AffirmativeBased affirmativeBased = new AffirmativeBased(getAccessDecisionVoters());
+        AffirmativeBased affirmativeBased = new AffirmativeBased(getAccessDecistionVoters());
         return affirmativeBased;
     }
 
-    private List<AccessDecisionVoter<?>> getAccessDecisionVoters() {
+    private List<AccessDecisionVoter<?>> getAccessDecistionVoters() {
         return Arrays.asList(new RoleVoter());
     }
 
     @Bean
     public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() {
-        return new UrlFilterInvocationSecurityMetadatsSource();
+        return new UrlFilterInvocationSecurityMetadataSource();
     }
+
+
 }
