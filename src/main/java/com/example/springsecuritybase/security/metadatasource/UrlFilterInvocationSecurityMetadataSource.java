@@ -1,5 +1,6 @@
 package com.example.springsecuritybase.security.metadatasource;
 
+import com.example.springsecuritybase.security.service.SecurityResourceService;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.web.FilterInvocation;
@@ -14,12 +15,17 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
 
     private LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap = new LinkedHashMap<>(); //키: 자원정보, 값: 권한정보인 Map 생성
 
+    private SecurityResourceService securityResourceService;
+
+    public UrlFilterInvocationSecurityMetadataSource(LinkedHashMap<RequestMatcher, List<ConfigAttribute>> resourcesMap, SecurityResourceService securityResourceService) {
+        this.requestMap = resourcesMap;
+        this.securityResourceService = securityResourceService;
+    }
+
     @Override
     public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
 
         HttpServletRequest request = ((FilterInvocation) object).getRequest(); //사용자 요청 객체 얻기
-
-//        requestMap.put(new AntPathRequestMatcher("/mypage"), Arrays.asList(new SecurityConfig("ROLE_USER"))); //임의 설정
 
         if(requestMap != null){
             for(Map.Entry<RequestMatcher, List<ConfigAttribute>> entry : requestMap.entrySet()){
@@ -48,5 +54,18 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
     @Override
     public boolean supports(Class<?> clazz) {
         return FilterInvocation.class.isAssignableFrom(clazz);
+    }
+
+    public void reload() {
+
+        LinkedHashMap<RequestMatcher, List<ConfigAttribute>> reloadedMap = securityResourceService.getResourceList();
+        Iterator<Map.Entry<RequestMatcher, List<ConfigAttribute>>> iterator = reloadedMap.entrySet().iterator();
+
+        requestMap.clear(); //기존 데이터 삭제
+
+        while(iterator.hasNext()) { //DB에 있는 값을 채워넣음
+            Map.Entry<RequestMatcher, List<ConfigAttribute>> entry = iterator.next();
+            requestMap.put(entry.getKey(), entry.getValue());
+        }
     }
 }

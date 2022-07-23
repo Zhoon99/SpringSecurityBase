@@ -1,13 +1,16 @@
 package com.example.springsecuritybase.security.configs;
 
 import com.example.springsecuritybase.security.common.FormWebAuthenticationDetailsSource;
+import com.example.springsecuritybase.security.factory.UrlResourcesMapFactoryBean;
 import com.example.springsecuritybase.security.handler.AjaxAuthenticationFailureHandler;
 import com.example.springsecuritybase.security.handler.AjaxAuthenticationSuccessHandler;
 import com.example.springsecuritybase.security.handler.FormAccessDeniedHandler;
 import com.example.springsecuritybase.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import com.example.springsecuritybase.security.provider.AjaxAuthenticationProvider;
 import com.example.springsecuritybase.security.provider.FormAuthenticationProvider;
+import com.example.springsecuritybase.security.service.SecurityResourceService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +37,7 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 @Configuration
 @EnableWebSecurity
@@ -46,6 +50,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AuthenticationSuccessHandler formAuthenticationSuccessHandler;
     @Autowired
     private AuthenticationFailureHandler formAuthenticationFailureHandler;
+    @Autowired
+    private SecurityResourceService securityResourceService;
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -87,7 +93,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(accessDeniedHandler())
         .and()
-                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class); //앞서 설정한 필터에서 인가 처리를 하기 때문에 두번쨰 필터를 작동하지 않음
+                .addFilterAt(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class); //커스텀 FilterSecurityInterceptor 설정
 
         http.csrf().disable();
 
@@ -154,8 +160,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() {
-        return new UrlFilterInvocationSecurityMetadataSource();
+    public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() throws Exception {
+        return new UrlFilterInvocationSecurityMetadataSource(urlResourcesMapFactoryBean().getObject(), securityResourceService);
+    }
+
+    private UrlResourcesMapFactoryBean urlResourcesMapFactoryBean() {
+
+        UrlResourcesMapFactoryBean urlResourcesMapFactoryBean = new UrlResourcesMapFactoryBean();
+        urlResourcesMapFactoryBean.setSecurityResourceService(securityResourceService);
+        return urlResourcesMapFactoryBean;
     }
 
 

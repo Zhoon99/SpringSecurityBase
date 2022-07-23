@@ -31,7 +31,7 @@ public class Resources implements Serializable {
     private String httpMethod;
 
     @Column(name = "order_num")
-    private int orderNum;
+    private int orderNum; //인가 권한 설정시 구체적인 경로거 먼저 와야하기 때문에 순서를 설정해준다
 
     @Column(name = "resource_type")
     private String resourceType;
