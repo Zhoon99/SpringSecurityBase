@@ -12,20 +12,20 @@ import java.util.*;
 
 public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
 
-    private LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap = new LinkedHashMap<>();
+    private LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap = new LinkedHashMap<>(); //키: 자원정보, 값: 권한정보인 Map 생성
 
     @Override
     public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
 
-        HttpServletRequest request = ((FilterInvocation) object).getRequest();
+        HttpServletRequest request = ((FilterInvocation) object).getRequest(); //사용자 요청 객체 얻기
 
-        requestMap.put(new AntPathRequestMatcher("/mypage"), Arrays.asList(new SecurityConfig("ROLE_USER")));
+//        requestMap.put(new AntPathRequestMatcher("/mypage"), Arrays.asList(new SecurityConfig("ROLE_USER"))); //임의 설정
 
         if(requestMap != null){
             for(Map.Entry<RequestMatcher, List<ConfigAttribute>> entry : requestMap.entrySet()){
-                RequestMatcher matcher = entry.getKey();
+                RequestMatcher matcher = entry.getKey();  //DB에 저장된 요청 정보
                 if(matcher.matches(request)){
-                    return entry.getValue();
+                    return entry.getValue(); //요청된 자원과 일치하는 키 값을 가진 Map 객체의 값(권한정보)을 반환
                 }
             }
         }

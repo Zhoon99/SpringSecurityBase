@@ -67,10 +67,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(final HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/mypage").hasRole("USER")
-                .antMatchers("/messages").hasRole("MANAGER")
-                .antMatchers("/config").hasRole("ADMIN")
-                .antMatchers("/**").permitAll()
+//                .antMatchers("/mypage").hasRole("USER")
+//                .antMatchers("/messages").hasRole("MANAGER")
+//                .antMatchers("/config").hasRole("ADMIN")
+//                .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -86,9 +86,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(accessDeniedHandler())
-//        .and()
-//                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class)
-        ;
+        .and()
+                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class); //앞서 설정한 필터에서 인가 처리를 하기 때문에 두번쨰 필터를 작동하지 않음
 
         http.csrf().disable();
 
@@ -136,7 +135,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public FilterSecurityInterceptor customFilterSecurityInterceptor() throws Exception {
+    public FilterSecurityInterceptor customFilterSecurityInterceptor() throws Exception { //인가 처리 필터 설정
 
         FilterSecurityInterceptor filterSecurityInterceptor = new FilterSecurityInterceptor();
         filterSecurityInterceptor.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource());
@@ -145,13 +144,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return filterSecurityInterceptor;
     }
 
-    private AccessDecisionManager affirmativeBased() {
-        AffirmativeBased affirmativeBased = new AffirmativeBased(getAccessDecistionVoters());
+    private AccessDecisionManager affirmativeBased() { //인증이 완료된 사용자가 리소스에 접근하려고 할때 해당 요청을 허용할것인지 판단하는 인터페이스
+        AffirmativeBased affirmativeBased = new AffirmativeBased(getAccessDecisionVoters()); //AffirmativeBased : 여러 Voter 중에 하나라도 허용되면 허용된다. (기본 전략)
         return affirmativeBased;
     }
 
-    private List<AccessDecisionVoter<?>> getAccessDecistionVoters() {
-        return Arrays.asList(new RoleVoter());
+    private List<AccessDecisionVoter<?>> getAccessDecisionVoters() {
+        return Arrays.asList(new RoleVoter()); //ROLE 기반 voter(권한 심사자)
     }
 
     @Bean
